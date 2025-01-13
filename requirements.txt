@@ -3,14 +3,12 @@ langchain
 langchain-core
 langchain-community
 langchain-openai
-langchain-experimental
+langchain-experimental>=0.0.42
 openai
 pydantic
 
 # Data processing
 pandas
-tabulate
-openpyxl  # for Excel files
 numpy
 
 # UI
