@@ -1,31 +1,38 @@
 from typing import Dict, Any
-from langchain_experimental.agents import create_pandas_dataframe_agent
-from langchain.agents.agent_types import AgentType
 import pandas as pd
 from config import DEBUG_MODE
+from .python_agent import PythonAgent
 
 class DataAgent:
     def process(self, state: Dict[str, Any]) -> Dict[str, Any]:
-        """Create pandas agent from CSV file."""
+        """Create Python agent from CSV file."""
         try:
             if DEBUG_MODE:
+                print(f"\n=== DataAgent Processing ===")
                 print(f"Loading file: {state['file_path']}")
                 
+            # Load and verify the data
             df = pd.read_csv(state['file_path'])
-            state['agent'] = create_pandas_dataframe_agent(
-                llm=state['llm'],
-                df=df,
-                verbose=DEBUG_MODE,
-                agent_type=AgentType.OPENAI_FUNCTIONS,
-                handle_parsing_errors=True,
-                allow_dangerous_code=True,  # Required for pandas operations
-                max_iterations=50,
-                max_execution_time=30,
-                early_stopping_method="force"
-            )
+            
+            if df.empty:
+                raise ValueError("DataFrame is empty")
             
             if DEBUG_MODE:
-                print(f"Created agent with DataFrame shape: {df.shape}")
+                print(f"DataFrame loaded: {df.shape[0]} rows × {df.shape[1]} columns")
+                print("Column names:", df.columns.tolist())
+                print("Sample data:")
+                print(df.head(2).to_string())
+                print("\nData types:")
+                print(df.dtypes)
+            
+            # Create Python agent
+            agent = PythonAgent(state['llm'])
+            agent.df = df  # Set the DataFrame
+            state['agent'] = agent
+            
+            if DEBUG_MODE:
+                print("\nPython agent created successfully")
+                print("=== DataAgent Complete ===\n")
                 
             return state
         except Exception as e:

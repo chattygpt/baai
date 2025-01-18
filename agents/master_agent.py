@@ -4,6 +4,7 @@ from pathlib import Path
 from .data_agent import DataAgent
 from .query_agent import QueryAgent
 from config import MODEL_NAME, DEBUG_MODE
+import pandas as pd
 
 class MasterAgent:
     def __init__(self):
@@ -17,7 +18,7 @@ class MasterAgent:
             if DEBUG_MODE:
                 print(f"\n=== Starting new analysis ===")
                 print(f"Query: {query}")
-                print(f"File: {file_path or 'None'}")
+                print(f"File path: {file_path or 'None'}")
                 
             state = {
                 "query": query,
@@ -28,8 +29,23 @@ class MasterAgent:
 
             if file_path and Path(file_path).exists():
                 state = self.data_agent.process(state)
+
+            # Get result from query agent
+            result = self.query_agent.process(state)
+
+            print("result", result)
             
-            state = self.query_agent.process(state)
+            # Update state with result
+            state['response'] = result.get('result', '')
+            state['reasoning'] = result.get('analysis', '')
+            
+            # Update history
+            state.setdefault('conversation_history', []).append({
+                'query': query,
+                'response': state['response'],
+                'reasoning': state['reasoning'],
+                'timestamp': pd.Timestamp.now().isoformat()
+            })
 
             if DEBUG_MODE:
                 print("=== Analysis complete ===\n")
@@ -37,7 +53,7 @@ class MasterAgent:
             return {
                 "status": "success",
                 "response": state['response'],
-                "reasoning": state.get('reasoning', "Analysis steps not available"),
+                "reasoning": state['reasoning'],
                 "conversation_history": state['conversation_history']
             }
         except Exception as e:
