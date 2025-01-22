@@ -1,3 +1,3 @@
-from .master_agent import MasterAgent
+from .master_agent import run_analysis
 
-__all__ = ['MasterAgent'] 
+__all__ = ['run_analysis'] 

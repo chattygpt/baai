@@ -10,13 +10,12 @@ project_root = Path(__file__).parent.parent.absolute()
 if str(project_root) not in sys.path:
     sys.path.insert(0, str(project_root))
 
-from agents import MasterAgent
+from agents import run_analysis
 from utils.setup import setup_project
-from config import MODEL_NAME
+from config import MODEL_NAME, DEBUG_MODE
 
 # Initialize
 setup_project()
-master_agent = MasterAgent()
 
 def save_uploaded_file(uploaded_file) -> str:
     """Save uploaded file and return path."""
@@ -39,9 +38,11 @@ def main():
         layout="wide"
     )
 
-    # Initialize session state for conversation history
+    # Initialize session state
     if 'conversation_history' not in st.session_state:
         st.session_state.conversation_history = []
+    if 'debug_mode' not in st.session_state:
+        st.session_state.debug_mode = True  # Default to True
 
     st.title("SQL Analysis Assistant")
     
@@ -49,6 +50,11 @@ def main():
     col1, col2 = st.columns([2, 1])
     
     with col1:
+        # Add debug mode toggle in sidebar
+        st.sidebar.title("Settings")
+        debug_enabled = st.sidebar.checkbox("Enable Debug Mode", value=st.session_state.debug_mode)
+        st.session_state.debug_mode = debug_enabled
+
         # File upload section
         st.subheader("1. Upload Data (Optional)")
         uploaded_file = st.file_uploader(
@@ -79,22 +85,48 @@ def main():
                 
             with st.spinner("Analyzing..."):
                 try:
-                    result = master_agent.run(query=query, file_path=file_path)
+                    result = run_analysis(query=query, file_path=file_path, debug_mode=st.session_state.debug_mode)
                     
                     if result.get("status") == "success":
-                        # Add to session state history
+                        # Show the response
+                        response = result.get('response', {})
+                        if isinstance(response, dict):
+                            # Show final answer prominently
+                            st.markdown("### Answer")
+                            st.success(response.get('final_answer', ''))
+                            
+                            # Show analysis details
+                            with st.expander("Analysis Details", expanded=True):
+                                # Show steps
+                                if response.get('steps'):
+                                    st.markdown("**Steps Taken:**")
+                                    for i, step in enumerate(response['steps'], 1):
+                                        st.markdown(f"{i}. {step}")
+                                
+                                # Show results
+                                if response.get('results'):
+                                    st.markdown("\n**Findings:**")
+                                    for res in response['results']:
+                                        st.markdown(f"• {res}")
+                            
+                            # Show code only in debug mode
+                            if st.session_state.debug_mode:
+                                if response.get('code'):
+                                    with st.expander("Code Used", expanded=False):
+                                        st.code(response['code'], language='python')
+                                        
+                                if result.get('debug_output'):
+                                    with st.expander("Debug Output", expanded=False):
+                                        st.text(result['debug_output'])
+                        else:
+                            st.success(str(response))
+                        
+                        # Add to conversation history
                         st.session_state.conversation_history.append({
                             'timestamp': datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
                             'query': query,
-                            'response': result.get("response", ""),
-                            'reasoning': result.get("reasoning", "Analysis steps not available")
+                            'response': response.get('final_answer', '') if isinstance(response, dict) else str(response)
                         })
-                        
-                        st.markdown("### Results")
-                        st.markdown(result.get("response", ""))
-                        
-                        with st.expander("View Analysis Steps"):
-                            st.markdown(result.get("reasoning", "Analysis steps not available"))
                     else:
                         st.error(result.get("error", "An unknown error occurred"))
                 except Exception as e:
@@ -106,12 +138,8 @@ def main():
         if st.session_state.conversation_history:
             for i, entry in enumerate(reversed(st.session_state.conversation_history)):
                 st.markdown(f"### {entry['timestamp']}")
-                st.markdown(f"**Q:** {entry['query']}")
-                st.markdown(f"**A:** {entry['response']}")
-                if entry.get('reasoning'):
-                    if st.button(f"Show Analysis #{i}", key=f"analysis_{i}"):
-                        st.markdown("**Analysis Steps:**")
-                        st.markdown(entry['reasoning'])
+                st.markdown(f"**Question:** {entry['query']}")
+                st.markdown(f"**Answer:** {entry['response']}")
                 st.markdown("---")
         else:
             st.info("No conversation history yet")

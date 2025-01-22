@@ -1,11 +1,11 @@
 from typing import Dict, Any
 import pandas as pd
 from config import DEBUG_MODE
-from .python_agent import PythonAgent
+from .python_agent import analyze_data
 
 class DataAgent:
     def process(self, state: Dict[str, Any]) -> Dict[str, Any]:
-        """Create Python agent from CSV file."""
+        """Process data using Python analysis."""
         try:
             if DEBUG_MODE:
                 print(f"\n=== DataAgent Processing ===")
@@ -25,13 +25,12 @@ class DataAgent:
                 print("\nData types:")
                 print(df.dtypes)
             
-            # Create Python agent
-            agent = PythonAgent(state['llm'])
-            agent.df = df  # Set the DataFrame
-            state['agent'] = agent
+            # Store DataFrame and analysis function in state
+            state['df'] = df
+            state['analyze_data'] = analyze_data
             
             if DEBUG_MODE:
-                print("\nPython agent created successfully")
+                print("\nData processing complete")
                 print("=== DataAgent Complete ===\n")
                 
             return state
