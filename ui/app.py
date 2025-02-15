@@ -42,7 +42,11 @@ def main():
     if 'conversation_history' not in st.session_state:
         st.session_state.conversation_history = []
     if 'debug_mode' not in st.session_state:
-        st.session_state.debug_mode = True  # Default to True
+        st.session_state.debug_mode = True
+    if 'thread_id' not in st.session_state:
+        st.session_state.thread_id = None
+    if 'file_id' not in st.session_state:
+        st.session_state.file_id = None
 
     st.title("SQL Analysis Assistant")
     
@@ -50,10 +54,20 @@ def main():
     col1, col2 = st.columns([2, 1])
     
     with col1:
-        # Add debug mode toggle in sidebar
+        # Add debug mode toggle and clear button in sidebar
         st.sidebar.title("Settings")
-        debug_enabled = st.sidebar.checkbox("Enable Debug Mode", value=st.session_state.debug_mode)
-        st.session_state.debug_mode = debug_enabled
+        col_debug, col_clear = st.sidebar.columns(2)
+        
+        with col_debug:
+            debug_enabled = st.checkbox("Enable Debug Mode", value=st.session_state.debug_mode)
+            st.session_state.debug_mode = debug_enabled
+            
+        with col_clear:
+            if st.button("New Analysis"):
+                st.session_state.thread_id = None
+                st.session_state.file_id = None
+                st.session_state.conversation_history = []
+                st.experimental_rerun()
 
         # File upload section
         st.subheader("1. Upload Data (Optional)")
@@ -64,10 +78,26 @@ def main():
         
         file_path = None
         if uploaded_file:
-            with st.spinner("Saving file..."):
-                file_path = save_uploaded_file(uploaded_file)
-                if file_path:
-                    st.success(f"File saved: {uploaded_file.name}")
+            with st.spinner("Processing file..."):
+                try:
+                    file_path = save_uploaded_file(uploaded_file)
+                    if file_path:
+                        # Initialize with file
+                        result = run_analysis(
+                            query="Initialize data analysis",
+                            file_path=file_path, 
+                            debug_mode=st.session_state.debug_mode,
+                            initialize=True
+                        )
+                        
+                        if result.get("status") == "success":
+                            st.session_state.thread_id = result.get("thread_id")
+                            st.session_state.file_id = result.get("file_id")
+                            st.success(f"File processed: {uploaded_file.name}")
+                        else:
+                            st.error(f"Failed to initialize analysis: {result.get('error', 'Unknown error')}")
+                except Exception as e:
+                    st.error(f"Error processing file: {str(e)}")
 
         # Query section
         st.subheader("2. Enter Your Question")
@@ -85,7 +115,14 @@ def main():
                 
             with st.spinner("Analyzing..."):
                 try:
-                    result = run_analysis(query=query, file_path=file_path, debug_mode=st.session_state.debug_mode)
+                    result = run_analysis(
+                        query=query, 
+                        file_path=file_path, 
+                        debug_mode=st.session_state.debug_mode,
+                        initialize=False,
+                        thread_id=st.session_state.thread_id,
+                        file_id=st.session_state.file_id
+                    )
                     
                     if result.get("status") == "success":
                         # Show the response

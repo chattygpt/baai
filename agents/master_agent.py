@@ -1,3 +1,4 @@
+# Main agent for coordinating analysis
 from typing import Dict, Any, Optional
 from langchain_openai import ChatOpenAI
 from pathlib import Path
@@ -6,11 +7,17 @@ import pandas as pd
 from .query_agent import analyze_query
 
 def create_llm():
-    """Create LangChain ChatOpenAI instance."""
+    # Create LangChain ChatOpenAI instance
     return ChatOpenAI(model_name=MODEL_NAME, temperature=0)
 
 def process_data(state: Dict[str, Any]) -> Dict[str, Any]:
-    """Process data from file."""
+    # Process data from file
+    # 
+    # Args:
+    #   state: Current application state containing file path and settings
+    #
+    # Returns:
+    #   Updated state with loaded DataFrame
     try:
         if DEBUG_MODE:
             print(f"\n=== Processing Data ===")
@@ -43,8 +50,18 @@ def process_data(state: Dict[str, Any]) -> Dict[str, Any]:
             print(f"Error processing data: {str(e)}")
         raise ValueError(f"Error processing file: {str(e)}")
 
-def run_analysis(query: str, file_path: Optional[str] = None, debug_mode: bool = True) -> Dict[str, Any]:
-    """Process query with optional file input."""
+def run_analysis(query: str, file_path: Optional[str] = None, debug_mode: bool = True,
+                initialize: bool = False, thread_id: Optional[str] = None,
+                file_id: Optional[str] = None) -> Dict[str, Any]:
+    # Process query with optional file input
+    #
+    # Args:
+    #   query: User's question
+    #   file_path: Path to CSV file (optional)
+    #   debug_mode: Whether to show debug output
+    #   initialize: Whether this is an initialization call
+    #   thread_id: Existing thread ID to reuse
+    #   file_id: Existing file ID to reuse
     try:
         if debug_mode:
             print(f"\n=== Starting new analysis ===")
@@ -57,7 +74,10 @@ def run_analysis(query: str, file_path: Optional[str] = None, debug_mode: bool =
             "file_path": file_path,
             "llm": create_llm(),
             "conversation_history": [],
-            "debug_mode": debug_mode  # Add debug mode to state
+            "debug_mode": debug_mode,
+            "initialize": initialize,
+            "thread_id": thread_id,
+            "file_id": file_id
         }
 
         # Process file if provided
@@ -67,18 +87,9 @@ def run_analysis(query: str, file_path: Optional[str] = None, debug_mode: bool =
         # Run query analysis
         result = analyze_query(state)
         
-        # Format response
-        response = {
-            "status": "success",
-            "response": result.get('response', ''),
-            "debug_output": result.get('debug_output') if debug_mode else None,
-            "conversation_history": state.get('conversation_history', [])
-        }
+        # Return complete result
+        return result
 
-        if debug_mode:
-            print("=== Analysis complete ===\n")
-
-        return response
     except Exception as e:
         if debug_mode:
             print(f"Error in analysis: {str(e)}")

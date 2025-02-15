@@ -1,3 +1,4 @@
+# Data processing agent
 from typing import Dict, Any
 import pandas as pd
 from config import DEBUG_MODE
@@ -5,7 +6,12 @@ from .python_agent import analyze_data
 
 class DataAgent:
     def process(self, state: Dict[str, Any]) -> Dict[str, Any]:
-        """Process data using Python analysis."""
+        # Process data using Python analysis
+        #
+        # Args:
+        #   state: Current application state containing:
+        #     - file_path: Path to CSV file
+        #     - debug_mode: Whether to show debug output
         try:
             if DEBUG_MODE:
                 print(f"\n=== DataAgent Processing ===")
