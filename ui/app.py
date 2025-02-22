@@ -64,6 +64,10 @@ def main():
             
         with col_clear:
             if st.button("New Analysis"):
+                # Clear session state
+                if 'current_file_id' in st.session_state:
+                    del st.session_state.current_file_id
+                # Clear other relevant session state variables
                 st.session_state.thread_id = None
                 st.session_state.file_id = None
                 st.session_state.conversation_history = []
@@ -71,33 +75,43 @@ def main():
 
         # File upload section
         st.subheader("1. Upload Data (Optional)")
-        uploaded_file = st.file_uploader(
-            "Upload a CSV file",
-            type=["csv"]
-        )
         
-        file_path = None
-        if uploaded_file:
-            with st.spinner("Processing file..."):
-                try:
-                    file_path = save_uploaded_file(uploaded_file)
-                    if file_path:
-                        # Initialize with file
-                        result = run_analysis(
-                            query="Initialize data analysis",
-                            file_path=file_path, 
-                            debug_mode=st.session_state.debug_mode,
-                            initialize=True
-                        )
-                        
-                        if result.get("status") == "success":
-                            st.session_state.thread_id = result.get("thread_id")
-                            st.session_state.file_id = result.get("file_id")
-                            st.success(f"File processed: {uploaded_file.name}")
-                        else:
-                            st.error(f"Failed to initialize analysis: {result.get('error', 'Unknown error')}")
-                except Exception as e:
-                    st.error(f"Error processing file: {str(e)}")
+        file_path = None  # Initialize file_path
+        
+        # Only show file uploader if no file is currently loaded
+        if 'current_file_id' not in st.session_state:
+            uploaded_file = st.file_uploader(
+                "Upload a CSV file",
+                type=["csv"]
+            )
+            
+            if uploaded_file:
+                with st.spinner("Processing file..."):
+                    try:
+                        file_path = save_uploaded_file(uploaded_file)
+                        if file_path:
+                            # Initialize with file
+                            result = run_analysis(
+                                query="Initialize data analysis",
+                                file_path=file_path, 
+                                debug_mode=st.session_state.debug_mode,
+                                initialize=True
+                            )
+                            
+                            if result.get("status") == "success":
+                                st.session_state.thread_id = result.get("thread_id")
+                                st.session_state.file_id = result.get("file_id")
+                                st.session_state.current_file_id = result.get("file_id")
+                                st.session_state.current_file_path = file_path  # Store file path
+                                st.success(f"File processed: {uploaded_file.name}")
+                            else:
+                                st.error(f"Failed to initialize analysis: {result.get('error', 'Unknown error')}")
+                    except Exception as e:
+                        st.error(f"Error processing file: {str(e)}")
+        else:
+            # Use stored file path
+            file_path = st.session_state.get('current_file_path')
+            st.info(f"Using previously uploaded file. Click 'New Analysis' to upload a different file.")
 
         # Query section
         st.subheader("2. Enter Your Question")
@@ -117,7 +131,7 @@ def main():
                 try:
                     result = run_analysis(
                         query=query, 
-                        file_path=file_path, 
+                        file_path=file_path,
                         debug_mode=st.session_state.debug_mode,
                         initialize=False,
                         thread_id=st.session_state.thread_id,
