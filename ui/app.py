@@ -75,7 +75,7 @@ def main():
                 st.session_state.thread_id = None
                 st.session_state.file_id = None
                 st.session_state.conversation_history = []
-                st.experimental_rerun()
+                st.rerun()
 
         # File upload section
         st.subheader("1. Upload Data (Optional)")
@@ -152,7 +152,7 @@ def main():
                         file_id=st.session_state.file_id
                     )
                     
-                    if result.get("status") == "success":
+                    if result and result.get("status") == "success":  # Add null check
                         # Show the response
                         response = result.get('response', {})
                         if isinstance(response, dict):
@@ -185,9 +185,14 @@ def main():
                             'query': query,
                             'response': response.get('final_answer', '') if isinstance(response, dict) else str(response)
                         })
-                    else:
-                        st.error(result.get("error", "An unknown error occurred"))
+                    elif result:  # Handle error case when result exists
+                        error_msg = result.get("error", "An unknown error occurred")
+                        debug(f"Analysis failed: {error_msg}")
+                        st.error(error_msg)
+                    else:  # Handle case when result is None
+                        st.error("Analysis failed: No response received")
                 except Exception as e:
+                    debug(f"Error during analysis: {str(e)}")
                     st.error(f"Error during analysis: {str(e)}")
 
     with col2:
@@ -205,7 +210,7 @@ def main():
         # Clear History button
         if st.button("Clear History"):
             st.session_state.conversation_history = []
-            st.experimental_rerun()
+            st.rerun()
 
 if __name__ == "__main__":
     main() 
