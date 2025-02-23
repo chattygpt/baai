@@ -1,7 +1,24 @@
+import os
+import streamlit as st
 from pathlib import Path
+from config import DEBUG_MODE
 from utils.logger import get_logger
 
 logger = get_logger(__name__)
+
+def debug(msg: str, output_list: list = None):
+    """Print debug message if debug mode is enabled.
+    
+    Args:
+        msg: Message to print
+        output_list: Optional list to append message to for later use
+    """
+    if DEBUG_MODE:
+        print(msg)
+        if output_list is not None:
+            output_list.append(msg)
+    if st.session_state.get('debug_mode', False):
+        st.write(msg)
 
 def ensure_directories():
     """Create necessary project directories."""

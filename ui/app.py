@@ -11,7 +11,7 @@ if str(project_root) not in sys.path:
     sys.path.insert(0, str(project_root))
 
 from agents import run_analysis
-from utils.setup import setup_project
+from utils.setup import setup_project, debug
 from config import MODEL_NAME, DEBUG_MODE
 
 # Initialize
@@ -47,6 +47,10 @@ def main():
         st.session_state.thread_id = None
     if 'file_id' not in st.session_state:
         st.session_state.file_id = None
+    
+    # Initialize button clicked state if not exists
+    if 'analyze_clicked' not in st.session_state:
+        st.session_state.analyze_clicked = False
 
     st.title("SQL Analysis Assistant")
     
@@ -118,15 +122,25 @@ def main():
         query = st.text_area(
             "What would you like to know about the data?",
             height=100,
+            key="query_input",
             help="Enter your question in plain English. For example: 'What are the top 5 selling products?'"
         )
 
         # Analysis button
-        if st.button("Analyze", type="primary"):
+        if st.button("Analyze", type="primary", key="analyze_button"):
+            st.session_state.analyze_clicked = True
+            st.rerun()
+
+        if st.session_state.analyze_clicked:
+            st.session_state.analyze_clicked = False
+            
+            debug(f"Analyzing query: {query}, file_path: {file_path}, debug_mode: {st.session_state.debug_mode}, initialize: {False}, thread_id: {st.session_state.thread_id}, file_id: {st.session_state.file_id}")
+
             if not query:
                 st.warning("Please enter a question.")
                 return
                 
+
             with st.spinner("Analyzing..."):
                 try:
                     result = run_analysis(
@@ -146,29 +160,22 @@ def main():
                             st.markdown("### Answer")
                             st.success(response.get('final_answer', ''))
                             
-                            # Show analysis details
-                            with st.expander("Analysis Details", expanded=True):
-                                # Show steps
+                            # Always show analysis details in expandable section
+                            with st.expander("Analysis Details", expanded=False):
                                 if response.get('steps'):
                                     st.markdown("**Steps Taken:**")
                                     for i, step in enumerate(response['steps'], 1):
                                         st.markdown(f"{i}. {step}")
                                 
-                                # Show results
                                 if response.get('results'):
                                     st.markdown("\n**Findings:**")
                                     for res in response['results']:
                                         st.markdown(f"• {res}")
                             
-                            # Show code only in debug mode
-                            if st.session_state.debug_mode:
+                            # Always show code in expandable section
+                            with st.expander("Code Used", expanded=False):
                                 if response.get('code'):
-                                    with st.expander("Code Used", expanded=False):
-                                        st.code(response['code'], language='python')
-                                        
-                                if result.get('debug_output'):
-                                    with st.expander("Debug Output", expanded=False):
-                                        st.text(result['debug_output'])
+                                    st.code(response['code'], language='python')
                         else:
                             st.success(str(response))
                         

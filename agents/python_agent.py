@@ -8,14 +8,10 @@ from openai import OpenAI
 from openai.types.beta import Assistant
 from openai.types.beta.threads import Run
 from config import DEBUG_MODE, OPENAI_API_KEY
+from utils.setup import setup_project, debug
 
 # Initialize OpenAI client
 client = OpenAI(api_key=OPENAI_API_KEY)
-
-def debug(msg: str):
-    """Print debug message if debug mode is enabled."""
-    if DEBUG_MODE:
-        print(msg)
 
 def get_assistant() -> Assistant:
     """Get or create an OpenAI Assistant."""
@@ -63,13 +59,9 @@ def get_df_info(df: pd.DataFrame) -> str:
 def analyze_data(query: str, file_id: Optional[str] = None, thread_id: Optional[str] = None) -> Dict[str, Any]:
     """Run analysis on uploaded data."""
     debug_output = []
-    def debug(msg: str):
-        if DEBUG_MODE:
-            print(msg)
-            debug_output.append(msg)
-
+    
     try:
-        debug("\n=== Analysis Start ===")
+        debug("\n=== Analysis Start ===", debug_output)
 
         # STEP 1: File Management
         # Store file_id in session state if not already present
@@ -237,8 +229,12 @@ New query:
         # STEP 6: Wait for Completion
         timeout = 300  # 5 minutes
         start_time = time.time()
+        max_attempts = 10
+        initial_wait = 4  # Initial wait time in seconds
+        subsequent_wait = 2  # Subsequent wait time in seconds
+        attempt = 0
         
-        while True:
+        while attempt < max_attempts:
             if time.time() - start_time > timeout:
                 raise TimeoutError("Analysis timed out after 5 minutes")
 
@@ -310,9 +306,29 @@ New query:
                 
                 break
             elif run_status.status in ['failed', 'cancelled', 'expired']:
-                raise Exception(f"Analysis failed with status: {run_status.status}")
-
-            time.sleep(1)  # Check every second
+                debug(f"Attempt {attempt + 1}/{max_attempts} failed with status: {run_status.status}")
+                if attempt == max_attempts - 1:
+                    error_details = f"Final status: {run_status.status}"
+                    if hasattr(run_status, 'last_error'):
+                        error_details += f", Error: {run_status.last_error}"
+                    raise Exception(f"Analysis failed after {max_attempts} attempts. {error_details}")
+                attempt += 1
+                wait_time = initial_wait if attempt == 0 else subsequent_wait
+                time.sleep(wait_time)
+                continue
+            elif run_status.status in ['queued', 'in_progress']:
+                debug(f"Attempt {attempt + 1}/{max_attempts}: Status {run_status.status}")
+                wait_time = initial_wait if attempt == 0 else subsequent_wait
+                time.sleep(wait_time)
+                attempt += 1
+            else:
+                # Unknown status
+                debug(f"Unexpected status '{run_status.status}' on attempt {attempt + 1}/{max_attempts}")
+                if attempt == max_attempts - 1:
+                    raise Exception(f"Analysis failed with unexpected status: {run_status.status}")
+                attempt += 1
+                wait_time = initial_wait if attempt == 0 else subsequent_wait
+                time.sleep(wait_time)
 
     except Exception as e:
         error_msg = f"Analysis error: {str(e)}"
@@ -330,17 +346,7 @@ New query:
     finally:
         # Resource Cleanup
         try:
-            # Only clean up if initialization failed
-            if initialize and not thread_id:
-                if file:
-                    client.files.delete(file.id)
-                    debug(f"File deleted: {file.id}")
-                if thread:
-                    client.beta.threads.delete(thread.id)
-                    debug(f"Thread deleted: {thread.id}")
-            # For regular queries or successful initialization, keep resources
-            debug("=== Cleanup Complete ===\n")
-
+            debug("=== Analysis Complete ===\n")
         except Exception as e:
             debug(f"Cleanup error: {str(e)}")
 
