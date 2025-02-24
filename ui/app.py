@@ -33,7 +33,7 @@ def save_uploaded_file(uploaded_file) -> str:
 
 def main():
     st.set_page_config(
-        page_title="SQL Analysis Assistant",
+        page_title="AI Biz Analyst",
         page_icon="🤖",
         layout="wide"
     )
