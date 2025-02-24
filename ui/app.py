@@ -52,7 +52,7 @@ def main():
     if 'analyze_clicked' not in st.session_state:
         st.session_state.analyze_clicked = False
 
-    st.title("SQL Analysis Assistant")
+    st.title("AI Biz Analyst")
     
     # Create two columns for layout
     col1, col2 = st.columns([2, 1])
