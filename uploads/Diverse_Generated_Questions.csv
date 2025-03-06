@@ -1,0 +1,101 @@
+Sl.No.,Question,Answer,Complexity Level
+1,What is the total number of transactions in the dataset?,5404,Low
+2,How many unique SKUs are present in the dataset?,4,Low
+3,What is the most common seller category in the dataset?,2,Low
+4,What is the median quantity sold per transaction?,36.0,Low
+5,What is the earliest recorded year in the dataset?,2012,Low
+6,What was the total revenue generated in the first recorded year?,863362.06,Medium
+7,What is the total number of units sold in the month with the highest sales?,1,Medium
+8,Which seller has the highest average price per item?,1070,Medium
+9,What was the total revenue for the highest-selling SKU?,1070_0,Medium
+10,Which day of the week had the highest total revenue?,1,Medium
+11,What is the compound annual growth rate (CAGR) of total revenue?,-11.5,High
+12,In which year did the highest year-over-year revenue growth occur?,2013,High
+13,What was the average annual revenue over the entire dataset?,804686.7650000001,High
+14,Predict the total revenue for next year assuming an average annual growth rate.,537968.63,High
+15,What is the longest continuous period of revenue growth?,1,High
+16,What was the percentage increase in sales revenue from the first year to the last year?,-30.69,High
+17,What was the month with the highest percentage increase in sales compared to the previous month?,12,Medium
+18,Which SKU saw the highest percentage growth in total sales over the years?,2053_2,High
+19,Which seller had the highest revenue growth from one year to another?,2053,High
+20,How many SKUs had a revenue decline in the last recorded year?,2,Medium
+21,What was the total revenue for SKU 2051_2?,486123.62,Low
+22,What was the total quantity sold by seller 2051 in the last recorded year?,7384,Low
+23,What was the total revenue for SKU 2052_2?,333096.08,High
+24,What was the total quantity sold by seller 2051 in the last recorded year?,7384,Medium
+25,What was the total revenue for SKU 2053_2?,737510.48,Low
+26,What was the total quantity sold by seller 2053 in the last recorded year?,11902,Medium
+27,What was the total revenue for SKU 1070_0?,1662016.88,High
+28,What was the total quantity sold by seller 2053 in the last recorded year?,11902,High
+29,What was the total revenue for SKU 1070_0?,1662016.88,Medium
+30,What was the total quantity sold by seller 2052 in the last recorded year?,5300,Medium
+31,What was the total revenue for SKU 2051_2?,486123.62,Low
+32,What was the total quantity sold by seller 1070 in the last recorded year?,20742,Low
+33,What was the total revenue for SKU 2053_2?,737510.48,Medium
+34,What was the total quantity sold by seller 2053 in the last recorded year?,11902,Medium
+35,What was the total revenue for SKU 2053_2?,737510.48,High
+36,What was the total quantity sold by seller 2053 in the last recorded year?,11902,Low
+37,What was the total revenue for SKU 2053_2?,737510.48,Medium
+38,What was the total quantity sold by seller 1070 in the last recorded year?,20742,Low
+39,What was the total revenue for SKU 2051_2?,486123.62,Low
+40,What was the total quantity sold by seller 2051 in the last recorded year?,7384,Low
+41,What was the total revenue for SKU 2053_2?,737510.48,Medium
+42,What was the total quantity sold by seller 2051 in the last recorded year?,7384,Medium
+43,What was the total revenue for SKU 2053_2?,737510.48,Medium
+44,What was the total quantity sold by seller 1070 in the last recorded year?,20742,Medium
+45,What was the total revenue for SKU 2051_2?,486123.62,High
+46,What was the total quantity sold by seller 1070 in the last recorded year?,20742,Medium
+47,What was the total revenue for SKU 2051_2?,486123.62,High
+48,What was the total quantity sold by seller 2051 in the last recorded year?,7384,Medium
+49,What was the total revenue for SKU 1070_0?,1662016.88,Medium
+50,What was the total quantity sold by seller 2051 in the last recorded year?,7384,Low
+51,What was the total revenue for SKU 1070_0?,1662016.88,Medium
+52,What was the total quantity sold by seller 1070 in the last recorded year?,20742,High
+53,What was the total revenue for SKU 2051_2?,486123.62,High
+54,What was the total quantity sold by seller 1070 in the last recorded year?,20742,Medium
+55,What was the total revenue for SKU 2052_2?,333096.08,High
+56,What was the total quantity sold by seller 2051 in the last recorded year?,7384,High
+57,What was the total revenue for SKU 2053_2?,737510.48,Medium
+58,What was the total quantity sold by seller 2052 in the last recorded year?,5300,High
+59,What was the total revenue for SKU 2051_2?,486123.62,Medium
+60,What was the total quantity sold by seller 2052 in the last recorded year?,5300,High
+61,What was the total revenue for SKU 2051_2?,486123.62,Medium
+62,What was the total quantity sold by seller 2052 in the last recorded year?,5300,High
+63,What was the total revenue for SKU 2051_2?,486123.62,Medium
+64,What was the total quantity sold by seller 2051 in the last recorded year?,7384,High
+65,What was the total revenue for SKU 1070_0?,1662016.88,High
+66,What was the total quantity sold by seller 2052 in the last recorded year?,5300,Medium
+67,What was the total revenue for SKU 2053_2?,737510.48,Low
+68,What was the total quantity sold by seller 2052 in the last recorded year?,5300,Low
+69,What was the total revenue for SKU 2052_2?,333096.08,High
+70,What was the total quantity sold by seller 2053 in the last recorded year?,11902,High
+71,What was the total revenue for SKU 2052_2?,333096.08,Medium
+72,What was the total quantity sold by seller 2051 in the last recorded year?,7384,High
+73,What was the total revenue for SKU 2053_2?,737510.48,Medium
+74,What was the total quantity sold by seller 2052 in the last recorded year?,5300,Medium
+75,What was the total revenue for SKU 1070_0?,1662016.88,Low
+76,What was the total quantity sold by seller 2053 in the last recorded year?,11902,High
+77,What was the total revenue for SKU 1070_0?,1662016.88,Medium
+78,What was the total quantity sold by seller 1070 in the last recorded year?,20742,Medium
+79,What was the total revenue for SKU 2051_2?,486123.62,Medium
+80,What was the total quantity sold by seller 2051 in the last recorded year?,7384,High
+81,What was the total revenue for SKU 2052_2?,333096.08,High
+82,What was the total quantity sold by seller 1070 in the last recorded year?,20742,Low
+83,What was the total revenue for SKU 1070_0?,1662016.88,Medium
+84,What was the total quantity sold by seller 1070 in the last recorded year?,20742,High
+85,What was the total revenue for SKU 2053_2?,737510.48,High
+86,What was the total quantity sold by seller 2051 in the last recorded year?,7384,Low
+87,What was the total revenue for SKU 2053_2?,737510.48,Low
+88,What was the total quantity sold by seller 2051 in the last recorded year?,7384,High
+89,What was the total revenue for SKU 2052_2?,333096.08,Medium
+90,What was the total quantity sold by seller 2053 in the last recorded year?,11902,Medium
+91,What was the total revenue for SKU 2052_2?,333096.08,Medium
+92,What was the total quantity sold by seller 1070 in the last recorded year?,20742,Medium
+93,What was the total revenue for SKU 2053_2?,737510.48,High
+94,What was the total quantity sold by seller 1070 in the last recorded year?,20742,Medium
+95,What was the total revenue for SKU 2052_2?,333096.08,Medium
+96,What was the total quantity sold by seller 2051 in the last recorded year?,7384,Low
+97,What was the total revenue for SKU 1070_0?,1662016.88,High
+98,What was the total quantity sold by seller 1070 in the last recorded year?,20742,High
+99,What was the total revenue for SKU 2053_2?,737510.48,Low
+100,What was the total quantity sold by seller 2053 in the last recorded year?,11902,Medium

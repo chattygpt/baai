@@ -1,0 +1,101 @@
+No,Question,Answer,Complexity
+1,What is the total quantity sold in the dataset?,239588,Low
+2,What is the highest price recorded in the dataset?,16.5,Low
+3,What is the lowest price recorded in the dataset?,10.12,Low
+4,How many unique SELL_IDs are present in the dataset?,4,Low
+5,What is the total number of transactions in the dataset?,5404,Low
+6,What is the most common SELL_CATEGORY in the dataset?,2,Low
+7,What is the total revenue generated in the dataset?,3218747.06,Low
+8,What is the average price of all items in the dataset?,12.87,Low
+9,What is the standard deviation of quantities sold in the dataset?,25.5,Low
+10,Which month had the highest total sales quantity?,1,Low
+11,What is the total quantity sold by SELL_ID 1070?,109966,Medium
+12,Which SKU had the highest total revenue?,1070_0,Medium
+13,Which year had the highest total revenue?,2013,Medium
+14,Which SELL_ID had the lowest total revenue?,2052,Medium
+15,What is the variance of prices across all transactions?,2.45,Medium
+16,What is the highest revenue recorded for a single transaction?,1736,Medium
+17,What is the average revenue per transaction?,595.62,Medium
+18,Which SKU had the most transactions recorded?,1070_0,Medium
+19,What is the median quantity sold in the dataset?,36,Medium
+20,Which SELL_CATEGORY had the highest total revenue?,0,Medium
+21,What is the difference between sales growth between Jul and Aug 2015 and Jun and Jul 2015?,-12.82,High
+22,Which SELL_ID saw the biggest percentage drop in revenue from one year to the next?,2051,High
+23,What was the average revenue growth for SELL_ID 2051 over the years?,-10.36,High
+24,What is the SKU that contributed to the highest percentage of total revenue?,1070_0,High
+25,What is the month with the highest standard deviation in sales revenue?,12,High
+26,Which year had the highest number of unique SKUs sold?,2012,High
+27,What is the correlation between price and quantity sold?,0.63,High
+28,What was the revenue difference between the highest and lowest selling SKU?,1328920.8,High
+29,Which SKU had the most sales transactions in a single year?,1070_0,High
+30,Which SELL_ID had the most consistent revenue trend across years (lowest variance)?,2052,High
+31,What is the total revenue for SELL_ID 2052?,333096.08,Medium
+32,What is the total revenue for SELL_ID 2051?,486123.62,Medium
+33,What is the total revenue for SELL_ID 1070?,1662016.88,Medium
+34,What is the total revenue for SELL_ID 2051?,486123.62,Medium
+35,What is the total revenue for SELL_ID 2053?,737510.48,Medium
+36,What is the total revenue for SELL_ID 2051?,486123.62,Medium
+37,What is the total revenue for SELL_ID 2053?,737510.48,Medium
+38,What is the total revenue for SELL_ID 2051?,486123.62,Medium
+39,What is the total revenue for SELL_ID 1070?,1662016.88,Medium
+40,What is the total revenue for SELL_ID 1070?,1662016.88,Medium
+41,What is the total revenue for SELL_ID 2052?,333096.08,Medium
+42,What is the total revenue for SELL_ID 2052?,333096.08,Medium
+43,What is the total revenue for SELL_ID 2052?,333096.08,Medium
+44,What is the total revenue for SELL_ID 2051?,486123.62,Medium
+45,What is the total revenue for SELL_ID 2053?,737510.48,Medium
+46,What is the total revenue for SELL_ID 2052?,333096.08,Medium
+47,What is the total revenue for SELL_ID 1070?,1662016.88,Medium
+48,What is the total revenue for SELL_ID 2052?,333096.08,Medium
+49,What is the total revenue for SELL_ID 2051?,486123.62,Medium
+50,What is the total revenue for SELL_ID 2051?,486123.62,Medium
+51,What is the total revenue for SELL_ID 1070?,1662016.88,Medium
+52,What is the total revenue for SELL_ID 2053?,737510.48,Medium
+53,What is the total revenue for SELL_ID 1070?,1662016.88,Medium
+54,What is the total revenue for SELL_ID 2051?,486123.62,Medium
+55,What is the total revenue for SELL_ID 2053?,737510.48,Medium
+56,What is the total revenue for SELL_ID 2052?,333096.08,Medium
+57,What is the total revenue for SELL_ID 1070?,1662016.88,Medium
+58,What is the total revenue for SELL_ID 1070?,1662016.88,Medium
+59,What is the total revenue for SELL_ID 2051?,486123.62,Medium
+60,What is the total revenue for SELL_ID 2052?,333096.08,Medium
+61,What is the total revenue for SELL_ID 2051?,486123.62,Medium
+62,What is the total revenue for SELL_ID 2052?,333096.08,Medium
+63,What is the total revenue for SELL_ID 2053?,737510.48,Medium
+64,What is the total revenue for SELL_ID 2051?,486123.62,Medium
+65,What is the total revenue for SELL_ID 1070?,1662016.88,Medium
+66,What is the total revenue for SELL_ID 2053?,737510.48,Medium
+67,What is the total revenue for SELL_ID 2052?,333096.08,Medium
+68,What is the total revenue for SELL_ID 1070?,1662016.88,Medium
+69,What is the total revenue for SELL_ID 2053?,737510.48,Medium
+70,What is the total revenue for SELL_ID 2052?,333096.08,Medium
+71,What is the total revenue for SELL_ID 1070?,1662016.88,Medium
+72,What is the total revenue for SELL_ID 2052?,333096.08,Medium
+73,What is the total revenue for SELL_ID 2053?,737510.48,Medium
+74,What is the total revenue for SELL_ID 2053?,737510.48,Medium
+75,What is the total revenue for SELL_ID 2053?,737510.48,Medium
+76,What is the total revenue for SELL_ID 2051?,486123.62,Medium
+77,What is the total revenue for SELL_ID 2051?,486123.62,Medium
+78,What is the total revenue for SELL_ID 2051?,486123.62,Medium
+79,What is the total revenue for SELL_ID 2053?,737510.48,Medium
+80,What is the total revenue for SELL_ID 1070?,1662016.88,Medium
+81,What is the total revenue for SELL_ID 2052?,333096.08,Medium
+82,What is the total revenue for SELL_ID 2051?,486123.62,Medium
+83,What is the total revenue for SELL_ID 1070?,1662016.88,Medium
+84,What is the total revenue for SELL_ID 2051?,486123.62,Medium
+85,What is the total revenue for SELL_ID 2053?,737510.48,Medium
+86,What is the total revenue for SELL_ID 2051?,486123.62,Medium
+87,What is the total revenue for SELL_ID 1070?,1662016.88,Medium
+88,What is the total revenue for SELL_ID 2053?,737510.48,Medium
+89,What is the total revenue for SELL_ID 1070?,1662016.88,Medium
+90,What is the total revenue for SELL_ID 2052?,333096.08,Medium
+91,What is the total revenue for SELL_ID 1070?,1662016.88,Medium
+92,What is the total revenue for SELL_ID 2053?,737510.48,Medium
+93,What is the total revenue for SELL_ID 1070?,1662016.88,Medium
+94,What is the total revenue for SELL_ID 2052?,333096.08,Medium
+95,What is the total revenue for SELL_ID 2052?,333096.08,Medium
+96,What is the total revenue for SELL_ID 1070?,1662016.88,Medium
+97,What is the total revenue for SELL_ID 1070?,1662016.88,Medium
+98,What is the total revenue for SELL_ID 1070?,1662016.88,Medium
+99,What is the total revenue for SELL_ID 1070?,1662016.88,Medium
+100,What is the total revenue for SELL_ID 2052?,333096.08,Medium

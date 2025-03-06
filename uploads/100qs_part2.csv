@@ -1,0 +1,51 @@
+Sl.No.,Question,Answer,Complexity Level
+1,How many transactions have a PRICE less than 13?,3569,Low
+2,What is the average QUANTITY for transactions with PRICE between 13 and 14 (inclusive)?,50.95,Low
+3,What is the sum of all PRICE values for transactions in the year 2014?,18966.54,Low
+4,What is the average QUANTITY for transactions in 2014?,44.11,Low
+5,What is the total revenue for transactions in Q2 (April–June) of 2013?,204599.78,Medium
+6,What is the maximum revenue recorded for any single transaction in 2012?,1680,Medium
+7,What is the minimum revenue recorded for any transaction in 2015?,98.08,Medium
+8,What is the total QUANTITY for transactions with SELL_CATEGORY = 2?,129622,Medium
+9,What is the average PRICE for transactions with SELL_CATEGORY = 1?,NA,Medium
+10,How many transactions occurred on even-numbered days?,2644,Low
+11,What is the average revenue per transaction for transactions on odd-numbered days?,594.64,Low
+12,What is the total QUANTITY for transactions whose SKU ends with “2”?,129622,Low
+13,What is the average PRICE for transactions with SKU containing “1070”?,15.16,Low
+14,What is the total revenue for the month having the lowest average PRICE?,233246.1,Medium
+15,What is the standard deviation of QUANTITY for transactions in 2013?,25.7,Medium
+16,What is the average daily QUANTITY sold (total QUANTITY divided by number of unique days)?,177.74,Medium
+17,What is the maximum total revenue recorded on a single day?,10097.58,Medium
+18,What is the minimum total revenue recorded on a single day?,1196.56,Medium
+19,What is the total QUANTITY for transactions in Q3 (July–September) of 2014?,16144,Medium
+20,What percentage of all transactions have a PRICE greater than 14?,20.56%,Medium
+21,What is the average PRICE for transactions that occurred on weekends?,12.87,Medium
+22,What is the total revenue for transactions on weekdays (Monday–Friday)?,2506459.16,Medium
+23,What is the average QUANTITY for transactions on Mondays?,48.45,Medium
+24,What is the total revenue for transactions in 2012 where the day is greater than 15?,449619.94,Medium
+25,What is the average PRICE for transactions in Q4 (October–December) of 2015?,NA,Medium
+26,How many transactions have a QUANTITY exactly equal to 50?,135,Low
+27,What is the average revenue for transactions with QUANTITY between 30 and 40 (inclusive)?,414.27,Medium
+28,What is the median QUANTITY for transactions in March?,34,Medium
+29,What is the average revenue per transaction for SELL_CATEGORY = 0 in 2013?,1236.39,Medium
+30,What is the total QUANTITY for transactions with a PRICE above 15?,56062,Medium
+31,What is the ratio of the average QUANTITY in 2015 to that in 2012?,1.02,Medium
+32,What is the total revenue for transactions that occurred on days less than 10?,943842.24,Medium
+33,What is the average PRICE for transactions where QUANTITY is below the overall average?,12.21,Medium
+34,What is the maximum total QUANTITY sold in a single day?,704,Medium
+35,What is the total revenue for transactions on the 10th day of any month?,109835.74,Low
+36,What is the forecasted total revenue for 2016 based on a linear regression of annual revenue?,603396.57,High
+37,What is the average QUANTITY for transactions that occurred on the 16th day of any month?,44.74,Low
+38,What is the total revenue for transactions with PRICE exactly equal to 12.64?,29350.08,Low
+39,How many transactions have SKU ending with “_0” and QUANTITY greater than 50?,1322,Low
+40,What is the average revenue per transaction for 2014 transactions in SELL_CATEGORY = 2?,385.36,Medium
+41,What is the correlation between QUANTITY and revenue for transactions with QUANTITY > 50?,0.94,High
+42,What is the total QUANTITY for transactions in Q1 (January–March) of 2015?,17642,Medium
+43,What is the average PRICE for transactions with SELL_ID = 2053?,11.94,Low
+44,What is the total revenue for transactions with SELL_ID = 1070?,1662016.88,Low
+45,What is the average QUANTITY for transactions in May (month = 5)?,43.16,Low
+46,"How many transactions occurred on prime-numbered days (2,3,5,7,11,13,17,19,23,29,31)?",1864,Medium
+47,What is the average PRICE for transactions on prime-numbered days?,12.87,Medium
+48,What is the total revenue for transactions with a PRICE below the median PRICE?,1052324.3,Medium
+49,What is the percentage change in total QUANTITY from 2014 to 2015?,-29.62%,High
+50,What is the forecasted average QUANTITY for 2016 based on a linear regression of annual average QUANTITY?,44.83,High

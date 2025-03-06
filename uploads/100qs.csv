@@ -1,0 +1,97 @@
+Sl.No.,Question,Answer,Complexity Level
+1,What is the total number of records in the dataset?,5404,Low
+2,What is the minimum recorded PRICE in the dataset?,10.12,Low
+3,What is the maximum recorded PRICE in the dataset?,16.5,Low
+4,What is the average (mean) PRICE across all records?,12.87,Low
+5,What is the total QUANTITY sold across all records?,239588,Low
+6,How many unique SELL_ID values are present?,4,Low
+7,What is the average QUANTITY sold per transaction?,44.34,Low
+8,What is the median day of the month for transactions?,16,Low
+9,What is the average year (mean) across all records?,2013.37,Low
+10,What is the range of the month values (max - min)?,11,Low
+11,What is the total revenue (sum of PRICE × QUANTITY) over all records?,3218747.06,Medium
+12,What is the total revenue from transactions with SELL_CATEGORY = 0?,1662016.88,Medium
+13,What is the average PRICE for transactions in SELL_CATEGORY 2?,12.1,Medium
+14,How many records are from the year 2012?,1460,Medium
+15,How many records are from the year 2015?,1012,Medium
+16,What is the total QUANTITY sold in the first half of the year (months 1–6)?,126500,Medium
+17,What is the average QUANTITY for transactions in December (month = 12)?,49.97,Medium
+18,What is the CAGR (Compound Annual Growth Rate) in average PRICE from 2012 to 2015? (Expressed as a decimal),-0.00583,High
+19,What is the percentage change in total QUANTITY sold from 2012 to 2013?,1.98%,High
+20,What is the total revenue for transactions that occurred on the 1st day of any month?,105205.42,Medium
+21,What is the average revenue per transaction?,595.62,Medium
+22,What is the highest revenue from a single record?,1736,Medium
+23,What is the lowest revenue from a single record?,98.08,Medium
+24,What is the total QUANTITY sold for SELL_ID 2051?,39374,Medium
+25,What is the average PRICE for transactions where QUANTITY > 50?,14.23,Medium
+26,How many transactions had a PRICE above the overall average PRICE?,1955,Medium
+27,What is the total QUANTITY sold for transactions where the day is greater than 20?,81952,Medium
+28,What is the average QUANTITY sold for transactions in July (month = 7)?,44.32,Medium
+29,What is the revenue growth rate (%) comparing total revenue of 2014 vs. 2013?,-1.16%,High
+30,What is the forecasted average PRICE for 2016 based on a simple linear trend from 2012 to 2015?,12.7,High
+31,What is the total revenue for transactions with SELL_CATEGORY 1?,0,Medium
+32,What is the average QUANTITY for transactions in SELL_CATEGORY 0?,81.4,Medium
+33,How many transactions occurred on the 15th day of any month?,176,Low
+34,What is the maximum QUANTITY recorded in a single transaction?,124,Low
+35,What is the average QUANTITY for transactions in the second half of the year (months 7–12)?,45.31,Medium
+36,What is the total revenue for Q1 (January–March) of 2013?,225539.34,High
+37,What is the median PRICE for transactions in Q4 (October–December) of 2014?,12.85,High
+38,What is the overall average revenue per unit sold (total revenue divided by total QUANTITY)?,13.43,High
+39,What is the ratio of total revenue for SELL_CATEGORY 2 to that for SELL_CATEGORY 0?,0.94,High
+40,What is the standard deviation of PRICE across all records?,1.56,Medium
+41,How many transactions occurred on the 31st day of any month?,104,Medium
+42,What is the average QUANTITY for transactions in February (month = 2)?,43.66,Medium
+43,"What is the total revenue for transactions with SKU ending in ""_0""?",1662016.88,Medium
+44,What is the forecasted total QUANTITY for 2016 based on annual totals?,45385,High
+45,What is the year-over-year percentage change in average QUANTITY from 2013 to 2014?,-0.96%,High
+46,What is the cumulative revenue from January 2012 to December 2013?,1746994.64,High
+47,"In the month with the highest total revenue, what is the average PRICE?",13.07,High
+48,What is the correlation coefficient between PRICE and QUANTITY?,0.63,High
+49,What is the average daily revenue (total revenue divided by the number of unique days) over the entire period?,2387.79,High
+50,What percentage of transactions had a QUANTITY less than the overall median QUANTITY?,49.72%,High
+,,,
+,,,
+,,,
+,,,
+,,,
+,,,
+,,,
+,,,
+,,,
+,,,
+,,,
+,,,
+,,,
+,,,
+,,,
+,,,
+,,,
+,,,
+,,,
+,,,
+,,,
+,,,
+,,,
+,,,
+,,,
+,,,
+,,,
+,,,
+,,,
+,,,
+,,,
+,,,
+,,,
+,,,
+,,,
+,,,
+,,,
+,,,
+,,,
+,,,
+,,,
+,,,
+,,,
+,,,
+,,,
+,,,
