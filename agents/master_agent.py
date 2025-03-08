@@ -8,6 +8,7 @@ from .query_agent import analyze_query
 from io import StringIO
 from openai import OpenAI
 from .python_agent import analyze_data
+from utils.setup import debug
 
 # Initialize OpenAI client
 client = OpenAI(api_key=OPENAI_API_KEY)
@@ -56,67 +57,45 @@ def process_data(state: Dict[str, Any]) -> Dict[str, Any]:
             print(f"Error processing data: {str(e)}")
         raise ValueError(f"Error processing file: {str(e)}")
 
-def run_analysis(query: str, file_path: Optional[str] = None, debug_mode: bool = True, 
-                thread_id: Optional[str] = None, file_id: Optional[str] = None,
-                initialize: bool = False):
-    """Run analysis using the Python agent."""
+def upload_file(file_path: str) -> str:
+    """Upload file to OpenAI and return file ID."""
+    with open(file_path, 'rb') as file:
+        response = client.files.create(
+            file=file,
+            purpose='assistants'
+        )
+        return response.id
+
+def run_analysis(
+    query: str,
+    file_path: Optional[str] = None,
+    debug_mode: bool = False,
+    initialize: bool = False,
+    thread_id: Optional[str] = None,
+    file_id: Optional[str] = None,
+    user_prompt: Optional[str] = None
+) -> Dict[str, Any]:
+    """Run analysis on data."""
     try:
-        if debug_mode:
-            print(f"\n=== Starting new analysis ===")
-            print(f"Query: {query}")
-            print(f"File path: {file_path}")
-            print(f"Thread ID: {thread_id}")
-            print(f"File ID: {file_id}")
-            print(f"Initialize: {initialize}")
-
-        # Create thread if none exists
-        if not thread_id:
-            thread = client.beta.threads.create()
-            thread_id = thread.id
-            if debug_mode:
-                print(f"Created new thread: {thread_id}")
-
-        # Load data if file_path provided
-        if file_path:
-            df = pd.read_csv(file_path)
+        from .python_agent import analyze_data
+        
+        # Upload file if provided and not already uploaded
+        if file_path and not file_id:
+            file_id = upload_file(file_path)
             
-            # If no file_id, upload the file
-            if not file_id:
-                csv_buffer = StringIO()
-                df.to_csv(csv_buffer, index=False)
-                file_content = csv_buffer.getvalue().encode('utf-8')
-                file = client.files.create(
-                    file=file_content,
-                    purpose='assistants'
-                )
-                file_id = file.id
-                if debug_mode:
-                    print(f"Uploaded file with ID: {file_id}")
-
-        # If initializing, return early with file info
-        if initialize:
-            return {
-                'status': 'success',
-                'thread_id': thread_id,
-                'file_id': file_id,
-                'message': 'File processed successfully'
-            }
-
-        # Run analysis through Python agent
+        # Run analysis
         result = analyze_data(
             query=query,
             file_id=file_id,
-            thread_id=thread_id
+            thread_id=thread_id,
+            user_prompt=user_prompt
         )
         
         return result
-
+        
     except Exception as e:
-        if debug_mode:
-            print(f"Error in analysis: {str(e)}")
+        debug(f"Analysis error: {str(e)}")
         return {
             'status': 'error',
-            'error': f"Error processing query: {str(e)}",
-            'thread_id': thread_id,
-            'file_id': file_id
+            'error': str(e)
         } 

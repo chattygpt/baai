@@ -6,19 +6,12 @@ from utils.logger import get_logger
 
 logger = get_logger(__name__)
 
-def debug(msg: str, output_list: list = None):
-    """Print debug message if debug mode is enabled.
-    
-    Args:
-        msg: Message to print
-        output_list: Optional list to append message to for later use
-    """
+def debug(message: str, output_list: list = None):
+    """Print debug message and optionally collect in output list."""
     if DEBUG_MODE:
-        print(msg)
-        if output_list is not None:
-            output_list.append(msg)
-    if st.session_state.get('debug_mode', False):
-        st.write(msg)
+        print(message)
+    if output_list is not None:
+        output_list.append(str(message))
 
 def ensure_directories():
     """Create necessary project directories."""

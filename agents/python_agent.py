@@ -56,12 +56,14 @@ def get_df_info(df: pd.DataFrame) -> str:
     df.info(buf=buffer)
     return buffer.getvalue()
 
-def analyze_data(query: str, file_id: Optional[str] = None, thread_id: Optional[str] = None) -> Dict[str, Any]:
+def analyze_data(query: str, file_id: Optional[str] = None, thread_id: Optional[str] = None, user_prompt: Optional[str] = None) -> Dict[str, Any]:
     """Run analysis on uploaded data."""
     debug_output = []
     
     try:
         debug("\n=== Analysis Start ===", debug_output)
+        if user_prompt:
+            debug(f"User prompt: {user_prompt}", debug_output)
 
         # STEP 1: File Management
         # Store file_id in session state if not already present
@@ -75,9 +77,9 @@ def analyze_data(query: str, file_id: Optional[str] = None, thread_id: Optional[
         if not thread_id:
             thread = client.beta.threads.create()
             thread_id = thread.id
-            debug(f"New thread created: {thread_id}")
+            debug(f"New thread created: {thread_id}", debug_output)
         else:
-            debug(f"Using existing thread: {thread_id}")
+            debug(f"Using existing thread: {thread_id}", debug_output)
 
         # STEP 4: Create Messages
         # First message: Upload file only if not already uploaded in this session
@@ -85,9 +87,9 @@ def analyze_data(query: str, file_id: Optional[str] = None, thread_id: Optional[
             # Verify file exists and is readable
             try:
                 file = client.files.retrieve(file_id)
-                debug(f"File verified: {file.filename}, size: {file.bytes}, purpose: {file.purpose}")
+                debug(f"File verified: {file.filename}, size: {file.bytes}, purpose: {file.purpose}", debug_output)
             except Exception as e:
-                debug(f"Error verifying file: {str(e)}")
+                debug(f"Error verifying file: {str(e)}", debug_output)
                 raise
 
             file_message = client.beta.threads.messages.create(
@@ -102,10 +104,10 @@ def analyze_data(query: str, file_id: Optional[str] = None, thread_id: Optional[
                     "tools": [{"type": "code_interpreter"}]
                 }]
             )
-            debug(f"File upload message created: {file_message.id}")
+            debug(f"File upload message created: {file_message.id}", debug_output)
             st.session_state.file_uploaded = True  # Mark file as uploaded
         elif file_id:
-            debug("File already uploaded in this session, skipping upload")
+            debug("File already uploaded in this session, skipping upload", debug_output)
 
         # Get conversation history and summarize it
         history = client.beta.threads.messages.list(
@@ -113,7 +115,7 @@ def analyze_data(query: str, file_id: Optional[str] = None, thread_id: Optional[
             order="asc"  # Get messages in chronological order
         )
         
-        debug(f"Conversation History:\n{history}\n")
+        debug(f"Conversation History:\n{history}\n", debug_output)
         # Format conversation history more cleanly
         conversation_text = []
         for msg in history.data:
@@ -123,7 +125,7 @@ def analyze_data(query: str, file_id: Optional[str] = None, thread_id: Optional[
             content = content.replace('\\', '/').replace('"', "'")  # Replace backslashes with forward slashes
             conversation_text.append(f"{role}: {content}")
 
-        debug(f"Conversation History:\n{' '.join(conversation_text)}\n")
+        debug(f"Conversation History:\n{' '.join(conversation_text)}\n", debug_output)
 
         # Create summary request with cleaner formatting
         summary_request = {
@@ -172,21 +174,25 @@ New query:
         # Get summary
         summary_response = client.chat.completions.create(**summary_request)
         summary = summary_response.choices[0].message.content
-        debug(f"Conversation Summary: {summary}")
+        debug(f"Conversation Summary: {summary}", debug_output)
 
         # Clean up summary text to avoid escape character issues
         clean_summary = summary#.replace('\\', '').replace('"', "'")
 
         # Second message: Send the query with context reference and summary
+        message_text = clean_summary
+        if user_prompt:
+            message_text = f"{user_prompt}\n\n{message_text}"
+            
         query_message = client.beta.threads.messages.create(
             thread_id=thread_id,
             role="user",
             content=[{
                 "type": "text",
-                "text": "Consider the uploaded file and analyze: " + clean_summary
+                "text": "Consider the uploaded file and analyze: " + message_text
             }]
         )
-        debug(f"Query message created: {query_message.id}")
+        debug(f"Query message created: {query_message.id}", debug_output)
 
         # STEP 5: Run Analysis
         run: Run = client.beta.threads.runs.create(
@@ -224,7 +230,7 @@ New query:
                 }
             }
         )
-        debug(f"\nAnalysis started: {run.id}")
+        debug(f"\nAnalysis started: {run.id}", debug_output)
 
         # STEP 6: Wait for Completion
         timeout = 300  # 5 minutes
@@ -243,7 +249,7 @@ New query:
                 run_id=run.id
             )
             
-            debug(f"Current status: {run_status.status}")
+            debug(f"Current status: {run_status.status}", debug_output)
             
             if run_status.status == 'completed':
                 # Get the latest message which contains the response
@@ -267,7 +273,7 @@ New query:
                     
                     if json_start >= 0 and json_end > json_start:
                         json_str = response_text[json_start:json_end].strip()
-                        debug(f"\nExtracted JSON:\n{json_str}\n")
+                        debug(f"\nExtracted JSON:\n{json_str}\n", debug_output)
                         response_json = json.loads(json_str)
                         
                         # Handle nested response in properties
@@ -281,9 +287,9 @@ New query:
                         if missing_fields:
                             raise ValueError(f"Response missing required fields: {missing_fields}")
                             
-                        debug("\n=== Final Analysis ===")
-                        debug(json.dumps(response_json, indent=2))
-                        debug("===================\n")
+                        debug("\n=== Final Analysis ===", debug_output)
+                        debug(json.dumps(response_json, indent=2), debug_output)
+                        debug("===================\n", debug_output)
 
                         # Return successful response
                         return {
@@ -291,22 +297,22 @@ New query:
                             'response': response_json,
                             'thread_id': thread_id,
                             'file_id': file_id,
-                            'debug_output': '\n'.join(debug_output) if debug_output else None
+                            'debug_output': '\n'.join(debug_output)
                         }
                     else:
                         raise ValueError("No JSON found in response")
                         
                 except (json.JSONDecodeError, ValueError) as e:
-                    debug(f"Error parsing response: {str(e)}")
+                    debug(f"Error parsing response: {str(e)}", debug_output)
                     return {
                         'status': 'error',
                         'error': str(e),
-                        'debug_output': '\n'.join(debug_output) if debug_output else None
+                        'debug_output': '\n'.join(debug_output)
                     }
                 
                 break
             elif run_status.status in ['failed', 'cancelled', 'expired']:
-                debug(f"Attempt {attempt + 1}/{max_attempts} failed with status: {run_status.status}")
+                debug(f"Attempt {attempt + 1}/{max_attempts} failed with status: {run_status.status}", debug_output)
                 if attempt == max_attempts - 1:
                     error_details = f"Final status: {run_status.status}"
                     if hasattr(run_status, 'last_error'):
@@ -314,14 +320,14 @@ New query:
                     return {
                         'status': 'error',
                         'error': f"Analysis failed after {max_attempts} attempts. {error_details}",
-                        'debug_output': '\n'.join(debug_output) if debug_output else None
+                        'debug_output': '\n'.join(debug_output)
                     }
                 attempt += 1
                 wait_time = initial_wait if attempt == 0 else subsequent_wait
                 time.sleep(wait_time)
                 continue
             elif run_status.status in ['queued', 'in_progress']:
-                debug(f"Attempt {attempt + 1}/{max_attempts}: Status {run_status.status}")
+                debug(f"Attempt {attempt + 1}/{max_attempts}: Status {run_status.status}", debug_output)
                 if attempt == max_attempts - 1:
                     # Cancel the run before returning error
                     try:
@@ -329,20 +335,20 @@ New query:
                             thread_id=thread_id,
                             run_id=run.id
                         )
-                        debug(f"Cancelled run {run.id} after max attempts")
+                        debug(f"Cancelled run {run.id} after max attempts", debug_output)
                     except Exception as e:
-                        debug(f"Error cancelling run: {str(e)}")
+                        debug(f"Error cancelling run: {str(e)}", debug_output)
                     return {
                         'status': 'error',
                         'error': f"Analysis timed out after {max_attempts} attempts. Last status: {run_status.status}",
-                        'debug_output': '\n'.join(debug_output) if debug_output else None
+                        'debug_output': '\n'.join(debug_output)
                     }
                 wait_time = initial_wait if attempt == 0 else subsequent_wait
                 time.sleep(wait_time)
                 attempt += 1
             else:
                 # Unknown status
-                debug(f"Unexpected status '{run_status.status}' on attempt {attempt + 1}/{max_attempts}")
+                debug(f"Unexpected status '{run_status.status}' on attempt {attempt + 1}/{max_attempts}", debug_output)
                 if attempt == max_attempts - 1:
                     # Cancel the run before returning error
                     try:
@@ -350,34 +356,42 @@ New query:
                             thread_id=thread_id,
                             run_id=run.id
                         )
-                        debug(f"Cancelled run {run.id} after unexpected status")
+                        debug(f"Cancelled run {run.id} after unexpected status", debug_output)
                     except Exception as e:
-                        debug(f"Error cancelling run: {str(e)}")
+                        debug(f"Error cancelling run: {str(e)}", debug_output)
                     return {
                         'status': 'error',
                         'error': f"Analysis failed with unexpected status: {run_status.status}",
-                        'debug_output': '\n'.join(debug_output) if debug_output else None
+                        'debug_output': '\n'.join(debug_output)
                     }
 
     except Exception as e:
         error_msg = f"Analysis error: {str(e)}"
-        debug(f"\nError Details:")
-        debug(f"- Error type: {type(e).__name__}")
-        debug(f"- Error message: {str(e)}")
-        debug(f"- Error location: {e.__traceback__.tb_frame.f_code.co_name}")
-        debug(f"- Line number: {e.__traceback__.tb_lineno}")
+        debug("\nError Details:", debug_output)
+        debug(f"- Error type: {type(e).__name__}", debug_output)
+        debug(f"- Error message: {str(e)}", debug_output)
+        debug(f"- Error location: {e.__traceback__.tb_frame.f_code.co_name}", debug_output)
+        debug(f"- Line number: {e.__traceback__.tb_lineno}", debug_output)
         return {
             'status': 'error',
             'error': error_msg,
-            'debug_output': '\n'.join(debug_output) if debug_output else None
+            'debug_output': '\n'.join(debug_output)
         }
 
     finally:
         # Resource Cleanup
         try:
-            debug("=== Analysis Complete ===\n")
+            debug("=== Analysis Complete ===\n", debug_output)
         except Exception as e:
-            debug(f"Cleanup error: {str(e)}")
+            debug(f"Cleanup error: {str(e)}", debug_output)
+        
+        # Always return debug output even if we hit finally
+        if not 'debug_output' in locals():
+            return {
+                'status': 'error',
+                'error': 'Analysis terminated unexpectedly',
+                'debug_output': '\n'.join(debug_output)
+            }
 
 # Export the main function
 __all__ = ['analyze_data'] 
