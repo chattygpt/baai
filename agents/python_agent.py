@@ -323,6 +323,15 @@ New query:
             elif run_status.status in ['queued', 'in_progress']:
                 debug(f"Attempt {attempt + 1}/{max_attempts}: Status {run_status.status}")
                 if attempt == max_attempts - 1:
+                    # Cancel the run before returning error
+                    try:
+                        client.beta.threads.runs.cancel(
+                            thread_id=thread_id,
+                            run_id=run.id
+                        )
+                        debug(f"Cancelled run {run.id} after max attempts")
+                    except Exception as e:
+                        debug(f"Error cancelling run: {str(e)}")
                     return {
                         'status': 'error',
                         'error': f"Analysis timed out after {max_attempts} attempts. Last status: {run_status.status}",
@@ -335,14 +344,20 @@ New query:
                 # Unknown status
                 debug(f"Unexpected status '{run_status.status}' on attempt {attempt + 1}/{max_attempts}")
                 if attempt == max_attempts - 1:
+                    # Cancel the run before returning error
+                    try:
+                        client.beta.threads.runs.cancel(
+                            thread_id=thread_id,
+                            run_id=run.id
+                        )
+                        debug(f"Cancelled run {run.id} after unexpected status")
+                    except Exception as e:
+                        debug(f"Error cancelling run: {str(e)}")
                     return {
                         'status': 'error',
                         'error': f"Analysis failed with unexpected status: {run_status.status}",
                         'debug_output': '\n'.join(debug_output) if debug_output else None
                     }
-                attempt += 1
-                wait_time = initial_wait if attempt == 0 else subsequent_wait
-                time.sleep(wait_time)
 
     except Exception as e:
         error_msg = f"Analysis error: {str(e)}"
