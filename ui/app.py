@@ -13,6 +13,7 @@ if str(project_root) not in sys.path:
 from agents import run_analysis
 from utils.setup import setup_project, debug
 from config import MODEL_NAME, DEBUG_MODE
+from utils.vector_store import initialize_vector_store
 
 # Initialize
 setup_project()
@@ -31,12 +32,38 @@ def save_uploaded_file(uploaded_file) -> str:
         st.error(f"Error saving file: {e}")
         return None
 
+def initialize_vector_search():
+    """Initialize the vector search with proper error handling."""
+    try:
+        if 'vector_store_initialized' not in st.session_state:
+            with st.spinner("Initializing document search..."):
+                # Check if docs directory exists and has files
+                docs_dir = Path("docs")
+                if not docs_dir.exists() or not any(docs_dir.iterdir()):
+                    st.warning("No documents found in the 'docs' directory. Vector search will be disabled.")
+                    st.session_state.vector_store_initialized = False
+                    return False
+                
+                # Initialize vector store
+                initialize_vector_store()
+                st.session_state.vector_store_initialized = True
+                st.success("Document search initialized successfully!")
+                return True
+        return st.session_state.vector_store_initialized
+    except Exception as e:
+        st.error(f"Error initializing document search: {str(e)}")
+        st.session_state.vector_store_initialized = False
+        return False
+
 def main():
     st.set_page_config(
         page_title="AI Biz Analyst",
         page_icon="🤖",
         layout="wide"
     )
+
+    # Initialize vector store with error handling
+    vector_search_available = initialize_vector_search()
 
     # Initialize session state
     if 'conversation_history' not in st.session_state:
@@ -77,10 +104,19 @@ def main():
                     # Clear session state
                     if 'current_file_id' in st.session_state:
                         del st.session_state.current_file_id
-                    # Clear other relevant session state variables
+                    # Clear thread ID to force new conversation
                     st.session_state.thread_id = None
                     st.session_state.file_id = None
+                    # Clear conversation history
                     st.session_state.conversation_history = []
+                    # Clear file upload flag
+                    if 'file_uploaded' in st.session_state:
+                        del st.session_state.file_uploaded
+                    # Clear any previous results
+                    if 'init_result' in st.session_state:
+                        del st.session_state.init_result
+                    if 'current_result' in st.session_state:
+                        del st.session_state.current_result
                     st.rerun()
 
             # File upload section

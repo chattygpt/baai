@@ -16,4 +16,14 @@ streamlit
 
 # Utils
 python-dotenv
-typing-extensions 
+typing-extensions
+
+# Document processing and vector search
+faiss-cpu
+unstructured
+python-pptx
+pypdf
+python-docx
+python-magic-bin; sys_platform == 'win32'
+python-magic; sys_platform != 'win32'
+unstructured[all-docs] 

@@ -9,6 +9,7 @@ from openai.types.beta import Assistant
 from openai.types.beta.threads import Run
 from config import DEBUG_MODE, OPENAI_API_KEY
 from utils.setup import setup_project, debug
+from utils.vector_store import get_document_processor
 
 # Initialize OpenAI client
 client = OpenAI(api_key=OPENAI_API_KEY)
@@ -81,8 +82,69 @@ def analyze_data(query: str, file_id: Optional[str] = None, thread_id: Optional[
         else:
             debug(f"Using existing thread: {thread_id}", debug_output)
 
-        # STEP 4: Create Messages
-        # First message: Upload file only if not already uploaded in this session
+        # Initialize variables
+        conversation_summary = ""
+        context = ""
+        
+        # For regular queries (not file initialization), do RAG search and query improvement
+        is_initialization = query.startswith("Initialize data analysis")
+        if not is_initialization:
+            # Get conversation history
+            history = client.beta.threads.messages.list(
+                thread_id=thread_id,
+                order="asc"
+            )
+            
+            # Format conversation history
+            conversation_text = []
+            for msg in history.data:
+                role = "user" if msg.role == "user" else "assistant"
+                content_text = []
+                for content_block in msg.content:
+                    if hasattr(content_block, 'text'):
+                        content_text.append(content_block.text.value)
+                
+                if content_text:
+                    content = " ".join(content_text)
+                    content = content.replace('\\', '/').replace('"', "'")
+                    conversation_text.append(f"{role}: {content}")
+
+            # Get conversation summary only
+            summary_request = {
+                "model": "gpt-4o-mini",
+                "messages": [
+                    {
+                        "role": "system", 
+                        "content": """Summarize the conversation history into key points that provide relevant context for the next query. 
+Keep only the essential information about previous analyses and findings."""
+                    },
+                    {
+                        "role": "user",
+                        "content": f"Conversation history:\n{' '.join(conversation_text)}"
+                    }
+                ]
+            }
+            
+            summary_response = client.chat.completions.create(**summary_request)
+            conversation_summary = summary_response.choices[0].message.content
+            debug("\n=== Conversation Summary ===", debug_output)
+            debug(conversation_summary, debug_output)
+            debug("==========================\n", debug_output)
+
+            # Get relevant context from documents
+            doc_processor = get_document_processor()
+            if doc_processor:
+                context, score, source, chunk_id = doc_processor.get_relevant_context(query)
+                if context:
+                    debug("\n=== RAG Context ===", debug_output)
+                    debug(f"Source: {source}", debug_output)
+                    debug(f"Chunk: {chunk_id}", debug_output)
+                    debug(f"Similarity Score: {score:.4f}", debug_output)
+                    debug("Content:", debug_output)
+                    debug(f"{context}\n", debug_output)
+                    debug("==================\n", debug_output)
+
+        # STEP 3: Upload file if needed
         if file_id and not st.session_state.get('file_uploaded', False):
             # Verify file exists and is readable
             try:
@@ -97,7 +159,7 @@ def analyze_data(query: str, file_id: Optional[str] = None, thread_id: Optional[
                 role="user",
                 content=[{
                     "type": "text",
-                    "text": "Here is the CSV file for analysis. Please confirm you can read it by showing the first few rows."
+                    "text": "Please analyze this CSV file when asked to do so."
                 }],
                 attachments=[{
                     "file_id": file_id,
@@ -109,92 +171,39 @@ def analyze_data(query: str, file_id: Optional[str] = None, thread_id: Optional[
         elif file_id:
             debug("File already uploaded in this session, skipping upload", debug_output)
 
-        # Get conversation history and summarize it
-        history = client.beta.threads.messages.list(
-            thread_id=thread_id,
-            order="asc"  # Get messages in chronological order
-        )
-        
-        debug(f"Conversation History:\n{history}\n", debug_output)
-        # Format conversation history more cleanly
-        conversation_text = []
-        for msg in history.data:
-            role = "user" if msg.role == "user" else "assistant"
-            # Clean the content text
-            content = msg.content[0].text.value if msg.content else "No content"
-            content = content.replace('\\', '/').replace('"', "'")  # Replace backslashes with forward slashes
-            conversation_text.append(f"{role}: {content}")
+        # STEP 4: Create analysis prompt
+        if is_initialization:
+            analysis_prompt = f"Consider the uploaded file and analyze: {query}"
+        else:
+            analysis_prompt = f"""Please analyze the data based on the following information:
 
-        debug(f"Conversation History:\n{' '.join(conversation_text)}\n", debug_output)
+Current Query:
+{query}
 
-        # Create summary request with cleaner formatting
-        summary_request = {
-            "model": "gpt-4o-mini",
-            "messages": [
-                {
-                    "role": "system", 
-                    "content": """You are a helpful assistant. Summarize the conversation history and combine it with the new query to create a new query.
+Previous Conversation Context:
+{conversation_summary}
 
-EXAMPLE 1:
-- Conversation history: 
-  Question: Which region had the highest revenue? 
-  Answer: California had the highest revenue.
-- New query: 
-  Question: What were the top products?
-- Generated query: 
-  Question: Which are the top selling products in California?
+Relevant Document Context:
+{context if context else "No additional context found"}
 
-EXAMPLE 2:
-- Conversation history:
-  Question: Which demograhic group purchases cars most frequently? 
-  Answer: 25-34 years old
-- New query:
-  Question: What is their average purchase amount?
-- Generated query:
-  Question: What is the average purchase amount for the 25-34 year old demographic?
+Please provide your analysis using the data and considering both the conversation history and any relevant document context."""
 
-Generated queries should be concise and easily convertible to Python code."""
-                },
-                {
-                    "role": "user",
-                    "content": """Conversation history:
-{}
+        debug("\n=== Analysis Prompt ===", debug_output)
+        debug(analysis_prompt, debug_output)
+        debug("=====================\n", debug_output)
 
-New query:
-{}
-
-""".format(
-                        '\n'.join(conversation_text),
-                        query.replace('\\', '/').replace('"', "'")  # Clean the query text too
-                    )
-                }
-            ]
-        }
-        
-        # Get summary
-        summary_response = client.chat.completions.create(**summary_request)
-        summary = summary_response.choices[0].message.content
-        debug(f"Conversation Summary: {summary}", debug_output)
-
-        # Clean up summary text to avoid escape character issues
-        clean_summary = summary#.replace('\\', '').replace('"', "'")
-
-        # Second message: Send the query with context reference and summary
-        message_text = clean_summary
-        if user_prompt:
-            message_text = f"{user_prompt}\n\n{message_text}"
-            
+        # STEP 5: Send analysis prompt
         query_message = client.beta.threads.messages.create(
             thread_id=thread_id,
             role="user",
             content=[{
                 "type": "text",
-                "text": "Consider the uploaded file and analyze: " + message_text
+                "text": analysis_prompt
             }]
         )
         debug(f"Query message created: {query_message.id}", debug_output)
 
-        # STEP 5: Run Analysis
+        # STEP 6: Run Analysis
         run: Run = client.beta.threads.runs.create(
             thread_id=thread_id,
             assistant_id=get_assistant().id,
@@ -232,7 +241,7 @@ New query:
         )
         debug(f"\nAnalysis started: {run.id}", debug_output)
 
-        # STEP 6: Wait for Completion
+        # STEP 7: Wait for Completion
         timeout = 300  # 5 minutes
         start_time = time.time()
         max_attempts = 15
