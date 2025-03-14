@@ -31,13 +31,20 @@ def get_assistant() -> Assistant:
     5. ALWAYS refer to previous messages in the thread for context before writing code.
     6. If a question directly or indirectly refers to previous or last analysis, use that information
     7. Build upon previous analyses when relevant
-    8. Return ONLY a JSON object in this exact format:
+    8. ALWAYS consider data granularity:
+       - Identify the granularity level required by the question (e.g., daily, monthly, by product, etc.)
+       - Check if the data needs to be aggregated or transformed to match the required granularity
+       - If granularity is unclear, either:
+         a) Make a reasonable assumption and clearly state it in your answer
+         b) Ask for clarification if the granularity significantly impacts the analysis
+    9. Return ONLY a JSON object in this exact format:
                 {
                     "code": "your complete python code here",
                     "steps": ["step 1", "step 2", "etc"],
                     "results": ["result 1", "result 2", "etc"],
                     "final_answer": "your final answer here"
-                }""",
+                }
+    10. Both results and final_answer will be displayed to the user.""",
                 response_format={"type": "json_object"}
             )
             st.session_state.openai_assistant = assistant
@@ -186,6 +193,14 @@ Previous Conversation Context:
 Relevant Document Context:
 {context if context else "No additional context found"}
 
+Important Considerations:
+1. Data Granularity: Before proceeding with the analysis, identify the required granularity level (e.g., daily, monthly, by product, etc.). If the granularity is not explicitly stated in the query:
+   - Make a reasonable assumption based on the context and state it clearly in your answer
+   - If the granularity choice would significantly impact the analysis, ask for clarification
+   - Ensure any aggregations or transformations maintain data integrity
+
+2. Previous Context: Consider the conversation history and build upon previous analyses when relevant.
+
 Please provide your analysis using the data and considering both the conversation history and any relevant document context."""
 
         debug("\n=== Analysis Prompt ===", debug_output)
@@ -217,21 +232,25 @@ Please provide your analysis using the data and considering both the conversatio
                         "properties": {
                             "code": {
                                 "type": "string",
-                                "description": "The complete Python code used for analysis"
+                                "description": "The complete Python code used for analysis",
+                                "example": "# Example code\ndata = pd.read_csv('sales.csv')\nresult = data.groupby('month')['sales'].sum()"
                             },
                             "steps": {
                                 "type": "array",
                                 "items": {"type": "string"},
-                                "description": "List of steps taken in the analysis"
+                                "description": "List of steps taken in the analysis",
+                                "example": ["Load the sales data", "Group by month and calculate total sales"]
                             },
                             "results": {
                                 "type": "array",
                                 "items": {"type": "string"},
-                                "description": "List of results found during analysis"
+                                "description": "List of results found during analysis",
+                                "example": ["January sales: $10,000", "February sales: $12,000"]
                             },
                             "final_answer": {
                                 "type": "string",
-                                "description": "The clear, concise final answer to the query"
+                                "description": "The clear, concise final answer to the query",
+                                "example": "Sales quantity grew by 20% from January to February 2023."
                             }
                         },
                         "required": ["code", "steps", "results", "final_answer"]

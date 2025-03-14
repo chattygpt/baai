@@ -214,7 +214,13 @@ def main():
                             if isinstance(response, dict):
                                 # Show final answer prominently in left pane
                                 st.markdown("### Answer")
+                                # Show final answer first
                                 st.success(response.get('final_answer', ''))
+                                # Show interim results after
+                                if response.get('results'):
+                                    st.markdown("---")
+                                    for res in response['results']:
+                                        st.markdown(f"• {res}")
                             else:
                                 st.success(str(response))
 
@@ -225,7 +231,8 @@ def main():
                             st.session_state.conversation_history.append({
                                 'timestamp': datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
                                 'query': query,
-                                'response': response.get('final_answer', '') if isinstance(response, dict) else str(response)
+                                'results': response.get('results', []) if isinstance(response, dict) else [],
+                                'final_answer': response.get('final_answer', '') if isinstance(response, dict) else str(response)
                             })
                         elif result:  # Handle error case when result exists
                             error_msg = result.get("error", "An unknown error occurred")
@@ -316,7 +323,11 @@ def main():
             for i, entry in enumerate(reversed(st.session_state.conversation_history)):
                 st.markdown(f"### {entry['timestamp']}")
                 st.markdown(f"**Question:** {entry['query']}")
-                st.markdown(f"**Answer:** {entry['response']}")
+                st.markdown(f"**Answer:** {entry['final_answer']}")
+                if entry.get('results'):
+                    st.markdown("---")
+                    for res in entry['results']:
+                        st.markdown(f"• {res}")
                 st.markdown("---")
         else:
             st.info("No conversation history yet")
