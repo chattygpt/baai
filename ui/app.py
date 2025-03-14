@@ -3,7 +3,8 @@ from pathlib import Path
 import sys
 import os
 import pandas as pd
-from datetime import datetime
+from datetime import datetime, timedelta
+import time
 
 # Add project root to path
 project_root = Path(__file__).parent.parent.absolute()
@@ -47,12 +48,29 @@ def initialize_vector_search():
                 # Initialize vector store
                 initialize_vector_store()
                 st.session_state.vector_store_initialized = True
-                st.success("Document search initialized successfully!")
                 return True
         return st.session_state.vector_store_initialized
     except Exception as e:
         st.error(f"Error initializing document search: {str(e)}")
         st.session_state.vector_store_initialized = False
+        return False
+
+def kill_timed_out_threads():
+    """Kill threads that have been running for too long."""
+    try:
+        if hasattr(st.session_state, 'thread_start_time'):
+            current_time = datetime.now()
+            thread_age = current_time - st.session_state.thread_start_time
+            
+            # If thread is older than 5 minutes, kill it
+            if thread_age > timedelta(minutes=5):
+                st.session_state.thread_id = None
+                if hasattr(st.session_state, 'thread_start_time'):
+                    del st.session_state.thread_start_time
+                return True
+        return False
+    except Exception as e:
+        st.error(f"Error killing thread: {str(e)}")
         return False
 
 def main():
@@ -81,43 +99,52 @@ def main():
     if 'analyze_clicked' not in st.session_state:
         st.session_state.analyze_clicked = False
 
+    # Maximum number of conversations to maintain in scroll
+    MAX_CONVERSATIONS = 50
+
     st.title("AI Biz Analyst")
     
     # Create tabs
-    tab1, tab2, tab3 = st.tabs(["Data Analysis", "Thread Instructions", "Conversation History"])
+    tab1, tab2, tab3 = st.tabs(["Data Analysis", "Thread Instructions", "Debug Output"])
     
     with tab1:
-        # Create two columns for layout - main content and debug pane
-        col1, col2 = st.columns([2, 1])
-        
-        with col1:
+        # Create single column layout for main content
+        with st.container():
             # Add debug mode toggle and clear button in sidebar
             st.sidebar.title("Settings")
-            col_debug, col_clear = st.sidebar.columns(2)
             
-            with col_debug:
-                debug_enabled = st.checkbox("Enable Debug Mode", value=st.session_state.debug_mode)
-                st.session_state.debug_mode = debug_enabled
-                
-            with col_clear:
-                if st.button("New Analysis", key="new_analysis"):
-                    # Clear session state
-                    if 'current_file_id' in st.session_state:
-                        del st.session_state.current_file_id
-                    # Clear thread ID to force new conversation
-                    st.session_state.thread_id = None
-                    st.session_state.file_id = None
-                    # Clear conversation history
-                    st.session_state.conversation_history = []
-                    # Clear file upload flag
-                    if 'file_uploaded' in st.session_state:
-                        del st.session_state.file_uploaded
-                    # Clear any previous results
-                    if 'init_result' in st.session_state:
-                        del st.session_state.init_result
-                    if 'current_result' in st.session_state:
-                        del st.session_state.current_result
+            # Debug mode toggle
+            debug_enabled = st.sidebar.checkbox("Enable Debug Mode", value=st.session_state.debug_mode)
+            st.session_state.debug_mode = debug_enabled
+            
+            # New Analysis button
+            if st.sidebar.button("New Analysis", key="new_analysis"):
+                # Clear session state
+                if 'current_file_id' in st.session_state:
+                    del st.session_state.current_file_id
+                # Clear thread ID to force new conversation
+                st.session_state.thread_id = None
+                st.session_state.file_id = None
+                # Clear conversation history
+                st.session_state.conversation_history = []
+                # Clear file upload flag
+                if 'file_uploaded' in st.session_state:
+                    del st.session_state.file_uploaded
+                # Clear any previous results
+                if 'init_result' in st.session_state:
+                    del st.session_state.init_result
+                if 'current_result' in st.session_state:
+                    del st.session_state.current_result
+                st.rerun()
+            
+            # Kill Thread button
+            if st.sidebar.button("Kill Thread", key="kill_thread"):
+                if kill_timed_out_threads():
+                    st.sidebar.success("Timed out thread killed successfully")
+                    time.sleep(1)  # Give user time to see the message
                     st.rerun()
+                else:
+                    st.sidebar.info("No timed out threads to kill")
 
             # File upload section
             st.subheader("Upload Data")
@@ -163,8 +190,8 @@ def main():
                 filename = Path(file_path).name if file_path else "unknown file"
                 st.info(f"Currently using: {filename}\nClick 'New Analysis' to upload a different file.")
 
-            # Query section
-            st.subheader("Enter Your Question")
+            # Query input at the top
+            st.subheader("Ask a Question")
             query = st.text_area(
                 "What would you like to know about the data?",
                 height=100,
@@ -175,20 +202,49 @@ def main():
             # Analysis button
             analyze_button = st.button("Analyze", type="primary", key="analyze_button")
             
+            st.markdown("---")
+            
+            # Display conversation history with icons and chat-like bubbles in reverse order
+            for entry in reversed(st.session_state.conversation_history):
+                # User message with icon
+                st.markdown(
+                    f"""
+                    <div style="display: flex; align-items: start; margin-bottom: 1rem;">
+                        <div style="background-color: #E8E8E8; padding: 0.5rem 1rem; border-radius: 15px; margin-left: 0.5rem; max-width: 80%;">
+                            <p style="margin: 0;"><strong>🧑 You:</strong> {entry['query']}</p>
+                        </div>
+                    </div>
+                    """,
+                    unsafe_allow_html=True
+                )
+                
+                # AI response with icon
+                st.markdown(
+                    f"""
+                    <div style="display: flex; align-items: start; margin-bottom: 1rem;">
+                        <div style="background-color: #F0F7FF; padding: 0.5rem 1rem; border-radius: 15px; margin-left: 0.5rem; max-width: 80%;">
+                            <p style="margin: 0;"><strong>🤖 AI:</strong></p>
+                            <p style="margin: 0.5rem 0;">{entry['final_answer']}</p>
+                            {"<hr style='margin: 0.5rem 0;'>" if entry['results'] else ""}
+                            {"<br>".join(f"• {res}" for res in entry['results']) if entry['results'] else ""}
+                        </div>
+                    </div>
+                    """,
+                    unsafe_allow_html=True
+                )
+
             # Check if data is loaded before allowing analysis
             if analyze_button:
                 if not file_path:
                     st.error("Please upload a data file before analyzing.")
                     return
                 st.session_state.analyze_clicked = True
-                # Clear previous debug output
-                if hasattr(st.session_state, 'init_result'):
-                    del st.session_state.init_result
+                # Clear only current result, keep initialization result
                 if hasattr(st.session_state, 'current_result'):
                     del st.session_state.current_result
                 st.rerun()
 
-            # Show answer in the left pane
+            # Process analysis
             if st.session_state.analyze_clicked:
                 st.session_state.analyze_clicked = False
                 
@@ -196,8 +252,14 @@ def main():
                     st.warning("Please enter a question.")
                     return
 
+                # Check for timed out threads before starting new analysis
+                kill_timed_out_threads()
+
                 with st.spinner("Analyzing..."):
                     try:
+                        # Record thread start time
+                        st.session_state.thread_start_time = datetime.now()
+                        
                         result = run_analysis(
                             query=query,
                             file_path=file_path,
@@ -209,31 +271,26 @@ def main():
                         )
                         
                         if result and result.get("status") == "success":
-                            # Show the response
                             response = result.get('response', {})
                             if isinstance(response, dict):
-                                # Show final answer prominently in left pane
-                                st.markdown("### Answer")
-                                # Show final answer first
-                                st.success(response.get('final_answer', ''))
-                                # Show interim results after
-                                if response.get('results'):
-                                    st.markdown("---")
-                                    for res in response['results']:
-                                        st.markdown(f"• {res}")
+                                # Add to conversation history
+                                st.session_state.conversation_history.append({
+                                    'timestamp': datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                                    'query': query,
+                                    'results': response.get('results', []) if isinstance(response, dict) else [],
+                                    'final_answer': response.get('final_answer', '') if isinstance(response, dict) else str(response)
+                                })
+                                # Maintain only the most recent conversations
+                                if len(st.session_state.conversation_history) > MAX_CONVERSATIONS:
+                                    st.session_state.conversation_history = st.session_state.conversation_history[-MAX_CONVERSATIONS:]
+                                
+                                # Store result in session state for debug output
+                                st.session_state.current_result = result
+                                
+                                st.rerun()  # Refresh to show new message in chat
                             else:
-                                st.success(str(response))
-
-                            # Store result in session state for right pane to use
-                            st.session_state.current_result = result
+                                st.error("Unexpected response format")
                             
-                            # Add to conversation history
-                            st.session_state.conversation_history.append({
-                                'timestamp': datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-                                'query': query,
-                                'results': response.get('results', []) if isinstance(response, dict) else [],
-                                'final_answer': response.get('final_answer', '') if isinstance(response, dict) else str(response)
-                            })
                         elif result:  # Handle error case when result exists
                             error_msg = result.get("error", "An unknown error occurred")
                             st.error(error_msg)
@@ -241,62 +298,6 @@ def main():
                             st.error("Analysis failed: No response received")
                     except Exception as e:
                         st.error(f"Error during analysis: {str(e)}")
-
-        # Debug and Results pane on the right
-        with col2:
-            st.markdown("### Debug Output")
-            if st.session_state.debug_mode:
-                # Show initialization analysis if available
-                if hasattr(st.session_state, 'init_result'):
-                    init_result = st.session_state.init_result
-                    
-                    if init_result.get('response') and isinstance(init_result['response'], dict):
-                        with st.expander("Analysis Details", expanded=False):
-                            if init_result['response'].get('steps'):
-                                st.markdown("**Steps Taken:**")
-                                for i, step in enumerate(init_result['response']['steps'], 1):
-                                    st.markdown(f"{i}. {step}")
-                            if init_result['response'].get('results'):
-                                st.markdown("\n**Findings:**")
-                                for res in init_result['response']['results']:
-                                    st.markdown(f"• {res}")
-                        
-                        with st.expander("Code Used", expanded=False):
-                            if init_result['response'].get('code'):
-                                st.code(init_result['response']['code'], language='python')
-                    
-                    if init_result.get('debug_output'):
-                        with st.expander("Full Analysis Log", expanded=True):
-                            st.text_area("Debug Log", value=init_result['debug_output'], height=400, label_visibility="collapsed")
-                
-                # Show query analysis if available
-                if hasattr(st.session_state, 'current_result'):
-                    result = st.session_state.current_result
-                    if result and result.get("status") == "success":
-                        response = result.get('response', {})
-                        if isinstance(response, dict):
-                            with st.expander("Analysis Details", expanded=False):
-                                if response.get('steps'):
-                                    st.markdown("**Steps Taken:**")
-                                    for i, step in enumerate(response['steps'], 1):
-                                        st.markdown(f"{i}. {step}")
-                                if response.get('results'):
-                                    st.markdown("\n**Findings:**")
-                                    for res in response['results']:
-                                        st.markdown(f"• {res}")
-                            
-                            with st.expander("Code Used", expanded=False):
-                                if response.get('code'):
-                                    st.code(response['code'], language='python')
-                        
-                        if result.get('debug_output'):
-                            with st.expander("Full Analysis Log", expanded=True):
-                                st.text_area("Debug Log", value=result['debug_output'], height=400, label_visibility="collapsed")
-                
-                if not hasattr(st.session_state, 'init_result') and not hasattr(st.session_state, 'current_result'):
-                    st.info("No debug output available yet.")
-            else:
-                st.info("Enable debug mode to see output here.")
 
     with tab2:
         st.header("Thread Instructions")
@@ -318,24 +319,62 @@ def main():
                 st.success("Instructions cleared!")
 
     with tab3:
-        st.header("Conversation History")
-        if st.session_state.conversation_history:
-            for i, entry in enumerate(reversed(st.session_state.conversation_history)):
-                st.markdown(f"### {entry['timestamp']}")
-                st.markdown(f"**Question:** {entry['query']}")
-                st.markdown(f"**Answer:** {entry['final_answer']}")
-                if entry.get('results'):
-                    st.markdown("---")
-                    for res in entry['results']:
-                        st.markdown(f"• {res}")
-                st.markdown("---")
+        st.header("Debug Output")
+        if st.session_state.debug_mode:
+            # Show initialization analysis if available
+            if hasattr(st.session_state, 'init_result') and st.session_state.init_result:
+                init_result = st.session_state.init_result
+                st.markdown("### Initialization Analysis")
+                
+                if init_result.get('response') and isinstance(init_result['response'], dict):
+                    with st.expander("Analysis Details", expanded=True):
+                        if init_result['response'].get('steps'):
+                            st.markdown("**Steps Taken:**")
+                            for i, step in enumerate(init_result['response']['steps'], 1):
+                                st.markdown(f"{i}. {step}")
+                        if init_result['response'].get('results'):
+                            st.markdown("\n**Findings:**")
+                            for res in init_result['response']['results']:
+                                st.markdown(f"• {res}")
+                    
+                    with st.expander("Code Used", expanded=True):
+                        if init_result['response'].get('code'):
+                            st.code(init_result['response']['code'], language='python')
+                
+                if init_result.get('debug_output'):
+                    with st.expander("Full Analysis Log", expanded=True):
+                        st.text_area("Debug Log", value=init_result['debug_output'], height=400, label_visibility="collapsed")
+            
+            # Show query analysis if available
+            if hasattr(st.session_state, 'current_result') and st.session_state.current_result:
+                result = st.session_state.current_result
+                if result and result.get("status") == "success":
+                    st.markdown("### Query Analysis")
+                    response = result.get('response', {})
+                    if isinstance(response, dict):
+                        with st.expander("Analysis Details", expanded=True):
+                            if response.get('steps'):
+                                st.markdown("**Steps Taken:**")
+                                for i, step in enumerate(response['steps'], 1):
+                                    st.markdown(f"{i}. {step}")
+                            if response.get('results'):
+                                st.markdown("\n**Findings:**")
+                                for res in response['results']:
+                                    st.markdown(f"• {res}")
+                        
+                        with st.expander("Code Used", expanded=True):
+                            if response.get('code'):
+                                st.code(response['code'], language='python')
+                    
+                    if result.get('debug_output'):
+                        with st.expander("Full Analysis Log", expanded=True):
+                            st.text_area("Debug Log", value=result['debug_output'], height=400, label_visibility="collapsed")
+            
+            if (not hasattr(st.session_state, 'init_result') or not st.session_state.init_result) and \
+               (not hasattr(st.session_state, 'current_result') or not st.session_state.current_result):
+                st.info("No debug output available yet. Run an analysis to see debug information.")
         else:
-            st.info("No conversation history yet")
-
-        # Clear History button
-        if st.button("Clear History", key="clear_history_tab"):
-            st.session_state.conversation_history = []
-            st.rerun()
+            st.info("Enable debug mode in Settings to see output here.")
 
 if __name__ == "__main__":
     main() 
